@@ -510,7 +510,18 @@ public class WifiConfigManager {
                 mRandomizedMacAddressMapping.remove(config.getSsidAndSecurityTypeString());
             }
         }
-        return WifiConfigurationUtil.calculatePersistentMacForConfiguration(config, mMac);
+        MacAddress result = WifiConfigurationUtil.calculatePersistentMacForConfiguration(config,
+                WifiConfigurationUtil.obtainMacRandHashFunction(Process.WIFI_UID));
+        if (result == null) {
+            result = WifiConfigurationUtil.calculatePersistentMacForConfiguration(config,
+                    WifiConfigurationUtil.obtainMacRandHashFunction(Process.WIFI_UID));
+        }
+        if (result == null) {
+            Log.wtf(TAG, "Failed to generate MAC address from KeyStore even after retrying. "
+                    + "Using locally generated MAC address instead.");
+            result = MacAddress.createRandomUnicastAddress();
+        }
+        return result;
     }
 
     /**
